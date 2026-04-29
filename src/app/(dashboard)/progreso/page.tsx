@@ -226,7 +226,12 @@ export default function ProgresoPage() {
   const adjustedProgressToGoal = Math.min(100, progressToGoal + habitsBoost);
 
   const estimatedDate = useMemo(() => {
-    if (!first?.bio_age || !latest?.bio_age || scansWithBioAge.length < 3 || currentAge <= targetAge) {
+    if (
+      !first?.bio_age ||
+      !latest?.bio_age ||
+      scansWithBioAge.length < 3 ||
+      (currentAge ?? 0) <= (targetAge ?? 0)
+    ) {
       return "Meta ya alcanzada o sin datos suficientes";
     }
     const totalDays =
@@ -234,7 +239,7 @@ export default function ProgresoPage() {
       (1000 * 60 * 60 * 24);
     const slopePerDay = (first.bio_age - latest.bio_age) / Math.max(1, totalDays);
     if (slopePerDay <= 0.001) return "No estimable con tendencia actual";
-    const daysNeeded = (currentAge - targetAge) / slopePerDay;
+    const daysNeeded = ((currentAge ?? 0) - (targetAge ?? 0)) / slopePerDay;
     const estimated = new Date(new Date(latest.created_at).getTime() + daysNeeded * 24 * 60 * 60 * 1000);
     return formatDate(estimated.toISOString());
   }, [first, latest, scansWithBioAge.length, currentAge, targetAge]);
@@ -309,7 +314,7 @@ export default function ProgresoPage() {
                   border: "1px solid rgba(127,119,221,0.4)",
                   borderRadius: "12px",
                 }}
-                formatter={(value: number) => [`${value} años`, "BioAge"]}
+                formatter={(value) => [`${value ?? 0} años`, "BioAge"]}
                 labelFormatter={(label) => `Fecha: ${label}`}
               />
               <Line

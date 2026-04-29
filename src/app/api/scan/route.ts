@@ -336,7 +336,7 @@ export async function POST(request: Request) {
               type: "image",
               source: {
                 type: "base64",
-                media_type: mimeType,
+                media_type: mimeType as "image/jpeg" | "image/png" | "image/webp",
                 data: photoBase64,
               },
             },

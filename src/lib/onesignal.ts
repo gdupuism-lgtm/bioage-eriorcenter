@@ -4,8 +4,8 @@ import {
   type Notification,
 } from "@onesignal/node-onesignal";
 
-const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
-const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
+const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID ?? "";
+const restApiKey = process.env.ONESIGNAL_REST_API_KEY ?? "";
 
 if (!appId || !restApiKey) {
   throw new Error(
@@ -31,7 +31,7 @@ export async function sendNotification(
     target_channel: "push",
     headings: { en: title, es: title },
     contents: { en: message, es: message },
-    url,
+    ...(url ? { url } : {}),
   };
   return client.createNotification(body);
 }

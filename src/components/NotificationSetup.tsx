@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+const APP_ID = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID ?? "";
 
 type OneSignalWeb = {
   init: (opts: {
@@ -17,13 +17,6 @@ type OneSignalWeb = {
     PushSubscription: { id?: string | null; token?: string | null };
   };
 };
-
-declare global {
-  interface Window {
-    OneSignal?: unknown;
-    OneSignalDeferred?: Array<(oneSignal: OneSignalWeb) => void>;
-  }
-}
 
 function useOneSignalInstance() {
   const ref = useRef<OneSignalWeb | null>(null);
@@ -62,7 +55,8 @@ export default function NotificationSetup() {
     if (initStarted.current) return;
     initStarted.current = true;
 
-    window.OneSignalDeferred.push(async (OneSignal: OneSignalWeb) => {
+    window.OneSignalDeferred.push(async (oneSignal: unknown) => {
+      const OneSignal = oneSignal as OneSignalWeb;
       setInstance(OneSignal);
       try {
         await OneSignal.init({
