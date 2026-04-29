@@ -3,6 +3,22 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { PostgrestError } from "@supabase/supabase-js";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+
+function formatPostgresProfileError(
+  err: PostgrestError,
+  context: { usedServiceRole: boolean }
+) {
+  const parts = [
+    err.message,
+    err.code ? `code=${err.code}` : null,
+    err.details ? `details=${err.details}` : null,
+    err.hint ? `hint=${err.hint}` : null,
+    `client=${context.usedServiceRole ? "service_role" : "anon_cookie_session"}`,
+  ].filter(Boolean);
+  return parts.join(" | ");
+}
 
 type AuthResult = {
   error: string | null;
@@ -70,23 +86,41 @@ export async function signUp(
   }
 
   if (data.user) {
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      {
-        id: data.user.id,
-        full_name: name,
-        chronological_age: profile.chronologicalAge,
-        gender: profile.gender,
-        primary_goal: profile.primaryGoal,
-        stress_level: profile.stressLevel,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" }
-    );
+    const age = Number(profile.chronologicalAge);
+    const stress = Number(profile.stressLevel);
+    if (!Number.isFinite(age) || !Number.isFinite(stress)) {
+      return { success: false, error: "Edad o nivel de estrés no válidos." };
+    }
+
+    const row = {
+      id: data.user.id,
+      full_name: name,
+      name,
+      chronological_age: Math.round(age),
+      gender: profile.gender,
+      primary_goal: profile.primaryGoal,
+      stress_level: Math.round(stress),
+      updated_at: new Date().toISOString(),
+    };
+
+    const admin = createServiceRoleClient();
+    const usedServiceRole = Boolean(admin);
+    const target = admin ?? supabase;
+    const { error: profileError } = await target.from("profiles").upsert(row, { onConflict: "id" });
 
     if (profileError) {
+      const diagnostic = formatPostgresProfileError(profileError, { usedServiceRole });
+      console.error("[signUp] profiles upsert failed — Supabase PostgREST error:", {
+        message: profileError.message,
+        code: profileError.code,
+        details: profileError.details,
+        hint: profileError.hint,
+        usedServiceRole,
+        row,
+      });
       return {
         success: false,
-        error: "No se pudo guardar tu perfil inicial. Intenta nuevamente.",
+        error: `No se pudo guardar tu perfil inicial. Supabase: ${diagnostic}`,
       };
     }
   }
