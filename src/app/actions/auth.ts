@@ -49,6 +49,31 @@ function mapAuthError(message: string) {
   return "Ocurrio un error de autenticacion. Intentalo de nuevo.";
 }
 
+/** Solo metadata: confirma que las vars públicas existen en el runtime del servidor (p. ej. Vercel). No imprime claves. */
+function logSupabasePublicEnvDiagnostics(context: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  let urlHost: string | null = null;
+  let urlParseOk = false;
+  if (url) {
+    try {
+      urlHost = new URL(url).host;
+      urlParseOk = true;
+    } catch {
+      urlHost = "INVALID_URL_STRING";
+    }
+  }
+  console.error(`[${context}] NEXT_PUBLIC Supabase env (sin secretos):`, {
+    has_NEXT_PUBLIC_SUPABASE_URL: Boolean(url),
+    url_host: urlHost,
+    url_https: url ? url.startsWith("https://") : false,
+    url_parse_ok: urlParseOk,
+    has_NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(anon),
+    anon_key_length: anon?.length ?? 0,
+    anon_looks_jwt_shape: anon ? anon.split(".").length >= 3 : false,
+  });
+}
+
 async function getBaseUrlFromHeaders() {
   const h = await headers();
   const origin = h.get("origin");
@@ -82,6 +107,14 @@ export async function signUp(
   });
 
   if (error) {
+    console.error("[signUp] supabase.auth.signUp failed — error completo:", {
+      message: error.message,
+      status: "status" in error ? (error as { status?: number }).status : undefined,
+      name: "name" in error ? (error as { name?: string }).name : undefined,
+      code: "code" in error ? (error as { code?: string }).code : undefined,
+      stack: "stack" in error ? (error as Error).stack : undefined,
+    });
+    logSupabasePublicEnvDiagnostics("signUp");
     return { success: false, error: mapAuthError(error.message) };
   }
 
