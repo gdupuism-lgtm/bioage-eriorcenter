@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #f5f5ff;
+  --accent: #7f77dd;
+  --surface: rgba(127, 119, 221, 0.12);
+  --surface-border: rgba(127, 119, 221, 0.3);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --font-sans: var(--font-dm-sans);
+  --font-heading: var(--font-syne);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-syne), Arial, Helvetica, sans-serif;
+}
+
+* {
+  border-color: var(--surface-border);
+}
+
+::selection {
+  background: rgba(127, 119, 221, 0.4);
+  color: #ffffff;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(127, 119, 221, 0.2);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(127, 119, 221, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.neo-button {
+  box-shadow:
+    3px 3px 8px rgba(0, 0, 0, 0.5),
+    -1px -1px 4px rgba(127, 119, 221, 0.15);
+  transition: all 0.2s ease;
+}
+
+.neo-button:hover {
+  box-shadow:
+    1px 1px 4px rgba(0, 0, 0, 0.5),
+    -1px -1px 2px rgba(127, 119, 221, 0.2);
+  transform: translateY(1px);
+}
+
+.neo-input {
+  box-shadow:
+    inset 2px 2px 6px rgba(0, 0, 0, 0.4),
+    inset -1px -1px 3px rgba(127, 119, 221, 0.05);
+}
